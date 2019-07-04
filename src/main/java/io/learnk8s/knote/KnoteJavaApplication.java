@@ -3,8 +3,11 @@ package io.learnk8s.knote;
 import lombok.*;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -58,12 +61,17 @@ class Note {
 }
 
 @Configuration
-class MvcConfig implements WebMvcConfigurer {
+@EnableConfigurationProperties(KnoteProperties.class)
+class KnoteConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private KnoteProperties properties;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
                 .addResourceHandler("/uploads/**")
-                .addResourceLocations("file:/tmp/uploads/")
+                .addResourceLocations("file:" + properties.getUploadDir())
                 .setCachePeriod(3600)
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
@@ -71,11 +79,24 @@ class MvcConfig implements WebMvcConfigurer {
 
 }
 
+@ConfigurationProperties(prefix = "knote")
+class KnoteProperties {
+    @Value("${uploadDir:/tmp/uploads/}")
+    private String uploadDir;
+
+    public String getUploadDir() {
+        return uploadDir;
+    }
+}
+
 @Controller
 class KNoteController {
 
     @Autowired
     private NotesRepository notesRepository;
+    @Autowired
+    private KnoteProperties properties;
+
     private Parser parser = Parser.builder().build();
     private HtmlRenderer renderer = HtmlRenderer.builder().build();
 
@@ -98,7 +119,7 @@ class KNoteController {
         if (upload != null && upload.equals("Upload")) {
             if (file != null && file.getOriginalFilename() != null && !file.getOriginalFilename().isEmpty()) {
                 uploadImage(file, description, model);
-            }else {
+            } else {
                 // I want to keep the previous description
                 model.addAttribute("description", description);
             }
@@ -114,8 +135,12 @@ class KNoteController {
     }
 
     private void uploadImage(MultipartFile file, String description, Model model) throws IOException {
+        File uploadsDir = new File(properties.getUploadDir());
+        if (!uploadsDir.exists()) {
+            uploadsDir.mkdir();
+        }
         String fileId = UUID.randomUUID().toString() + "." + file.getOriginalFilename().split("\\.")[1];
-        file.transferTo(new File("/tmp/uploads/" + fileId));
+        file.transferTo(new File(properties.getUploadDir() + fileId));
         model.addAttribute("description",
                 description + " ![](/uploads/" + fileId + ")");
     }

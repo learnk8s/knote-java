@@ -1,6 +1,14 @@
 package io.learnk8s.knote;
 
-import lombok.*;
+
+import io.minio.MinioClient;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.apache.commons.io.IOUtils;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,24 +20,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import org.commonmark.node.*;
-import org.commonmark.parser.Parser;
 
 @SpringBootApplication
 public class KnoteJavaApplication {
@@ -84,8 +89,50 @@ class KnoteProperties {
     @Value("${uploadDir:/tmp/uploads/}")
     private String uploadDir;
 
+    @Value("${minio.host:localhost}")
+    private String minioHost;
+
+    @Value("${minio.bucket:image-storage}")
+    private String minioBucket;
+
+    @Value("${minio.port:9000}")
+    private String minioPort;
+
+    @Value("${minio.access.key:}")
+    private String minioAccessKey;
+
+    @Value("${minio.secret.key:}")
+    private String minioSecretKey;
+
+    @Value("${minio.useSSL:false}")
+    private boolean minioUseSSL;
+
     public String getUploadDir() {
         return uploadDir;
+    }
+
+    public String getMinioHost() {
+        return minioHost;
+    }
+
+    public String getMinioBucket() {
+        return minioBucket;
+    }
+
+    public String getMinioPort() {
+        return minioPort;
+    }
+
+    public String getMinioAccessKey() {
+        return minioAccessKey;
+    }
+
+    public String getMinioSecretKey() {
+        return minioSecretKey;
+    }
+
+    public boolean isMinioUseSSL() {
+        return minioUseSSL;
     }
 }
 
@@ -100,18 +147,26 @@ class KNoteController {
     private Parser parser = Parser.builder().build();
     private HtmlRenderer renderer = HtmlRenderer.builder().build();
 
+    private MinioClient minioClient;
+
+    @PostConstruct
+    public void init() {
+        initMinio();
+    }
+
+
     @GetMapping("/")
     public String index(Model model) {
         getAllNotes(model);
         return "index";
     }
 
-    @PostMapping("/notes")
+    @PostMapping("/note")
     public String saveNotes(@RequestParam("image") MultipartFile file,
                             @RequestParam String description,
                             @RequestParam(required = false) String publish,
                             @RequestParam(required = false) String upload,
-                            Model model) throws IOException {
+                            Model model) throws Exception {
 
         if (publish != null && publish.equals("Publish")) {
             saveNote(description, model);
@@ -128,21 +183,31 @@ class KNoteController {
         return "index";
     }
 
+    @GetMapping(value = "/img/{name}", produces = MediaType.IMAGE_PNG_VALUE)
+    public @ResponseBody
+    byte[] getImageByName(@PathVariable String name) throws Exception {
+        InputStream imageStream = minioClient.getObject(properties.getMinioBucket(), name);
+        return IOUtils.toByteArray(imageStream);
+    }
+
     private void getAllNotes(Model model) {
         List<Note> notes = notesRepository.findAll();
         Collections.reverse(notes);
         model.addAttribute("notes", notes);
     }
 
-    private void uploadImage(MultipartFile file, String description, Model model) throws IOException {
+    private void uploadImage(MultipartFile file, String description, Model model) throws Exception {
         File uploadsDir = new File(properties.getUploadDir());
         if (!uploadsDir.exists()) {
             uploadsDir.mkdir();
         }
         String fileId = UUID.randomUUID().toString() + "." + file.getOriginalFilename().split("\\.")[1];
-        file.transferTo(new File(properties.getUploadDir() + fileId));
+        //To store files locally
+        //file.transferTo(new File(properties.getUploadDir() + fileId));
+        //To use Minio Buckets
+        minioClient.putObject(properties.getMinioBucket(), fileId, file.getInputStream(), file.getSize(), null, null, file.getContentType());
         model.addAttribute("description",
-                description + " ![](/uploads/" + fileId + ")");
+                description + " ![](/img/" + fileId + ")");
     }
 
     private void saveNote(String description, Model model) {
@@ -153,6 +218,25 @@ class KNoteController {
             notesRepository.save(new Note(null, html));
             //After publish we need to clean up the textarea
             model.addAttribute("description", "");
+        }
+    }
+
+    private void initMinio() {
+        try {
+            // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
+            String minioEndpoint = ((properties.isMinioUseSSL()) ? "https://" : "http://") + properties.getMinioHost() + ":" + properties.getMinioPort();
+            minioClient = new MinioClient(minioEndpoint, properties.getMinioAccessKey(), properties.getMinioSecretKey());
+
+            // Check if the bucket already exists.
+            boolean isExist = minioClient.bucketExists(properties.getMinioBucket());
+            if (isExist) {
+                System.out.println("Bucket already exists.");
+            } else {
+                minioClient.makeBucket(properties.getMinioBucket());
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error occurred: " + e);
         }
     }
 

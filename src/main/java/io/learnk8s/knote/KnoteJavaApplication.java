@@ -95,9 +95,6 @@ class KnoteProperties {
     @Value("${minio.bucket:image-storage}")
     private String minioBucket;
 
-    @Value("${minio.port:9000}")
-    private String minioPort;
-
     @Value("${minio.access.key:}")
     private String minioAccessKey;
 
@@ -106,6 +103,9 @@ class KnoteProperties {
 
     @Value("${minio.useSSL:false}")
     private boolean minioUseSSL;
+
+    @Value("${minio.reconnect.enabled:true}")
+    private boolean minioReconnectEnabled;
 
     public String getUploadDir() {
         return uploadDir;
@@ -119,10 +119,6 @@ class KnoteProperties {
         return minioBucket;
     }
 
-    public String getMinioPort() {
-        return minioPort;
-    }
-
     public String getMinioAccessKey() {
         return minioAccessKey;
     }
@@ -133,6 +129,10 @@ class KnoteProperties {
 
     public boolean isMinioUseSSL() {
         return minioUseSSL;
+    }
+
+    public boolean isMinioReconnectEnabled() {
+        return minioReconnectEnabled;
     }
 }
 
@@ -222,22 +222,39 @@ class KNoteController {
     }
 
     private void initMinio() {
-        try {
-            // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
-            String minioEndpoint = ((properties.isMinioUseSSL()) ? "https://" : "http://") + properties.getMinioHost() + ":" + properties.getMinioPort();
-            minioClient = new MinioClient(minioEndpoint, properties.getMinioAccessKey(), properties.getMinioSecretKey());
+        boolean success = false;
+        while (!success) {
+            try {
+                System.out.println("> Trying to connecto to Minio instance at:");
+                System.out.println("\t > Minio Host: http://" + properties.getMinioHost());
 
-            // Check if the bucket already exists.
-            boolean isExist = minioClient.bucketExists(properties.getMinioBucket());
-            if (isExist) {
-                System.out.println("Bucket already exists.");
-            } else {
-                minioClient.makeBucket(properties.getMinioBucket());
+                minioClient = new MinioClient("http://" + properties.getMinioHost() + ":9000" , properties.getMinioAccessKey(), properties.getMinioSecretKey(), false);
+                // Check if the bucket already exists.
+                boolean isExist = minioClient.bucketExists(properties.getMinioBucket());
+                if (isExist) {
+                    System.out.println("> Bucket already exists.");
+                } else {
+                    minioClient.makeBucket(properties.getMinioBucket());
+
+                }
+                success = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("> Minio Reconnect: " + properties.isMinioReconnectEnabled());
+                if (properties.isMinioReconnectEnabled()) {
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                } else {
+                    success = true;
+
+                }
             }
-
-        } catch (Exception e) {
-            System.out.println("Error occurred: " + e);
         }
+        System.out.println("> Minio initialized!");
+
     }
 
 }

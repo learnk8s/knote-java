@@ -118,17 +118,17 @@ class KNoteController {
 
         if (publish != null && publish.equals("Publish")) {
             saveNote(description, model);
+            getAllNotes(model);
+            return "redirect:/";
         }
         if (upload != null && upload.equals("Upload")) {
             if (file != null && file.getOriginalFilename() != null &&
                     !file.getOriginalFilename().isEmpty()) {
                 uploadImage(file, description, model);
-            } else {
-                // I want to keep the previous description
-                model.addAttribute("description", description);
             }
+            getAllNotes(model);
+            return "index";
         }
-        getAllNotes(model);
         return "index";
     }
 
@@ -145,7 +145,7 @@ class KNoteController {
             uploadsDir.mkdir();
         }
         String fileId = UUID.randomUUID().toString() + "." +
-                          file.getOriginalFilename().split("\\.")[1];
+                file.getOriginalFilename().split("\\.")[1];
         file.transferTo(new File(properties.getUploadDir() + fileId));
         model.addAttribute("description",
                 description + " ![](/uploads/" + fileId + ")");
@@ -157,7 +157,7 @@ class KNoteController {
             Node document = parser.parse(description.trim());
             String html = renderer.render(document);
             notesRepository.save(new Note(null, html));
-            //After publish we need to clean up the textarea
+            //After publish you need to clean up the textarea
             model.addAttribute("description", "");
         }
     }

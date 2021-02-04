@@ -4,12 +4,12 @@ EKS is a managed Kubernetes service, which means that Amazon Web Services (AWS) 
 
 In particular, AWS:
 
-* Manages Kubernetes API servers and the etcd database.
-* Runs the Kubernetes control plane across three availability zones.
-* Scales the control-plane as you add more nodes to your cluster.
-* Provides a mechanism to upgrade your control plane to a newer version.
-* Rotates certificates.
-* [And more](https://aws.amazon.com/eks/?whats-new-cards.sort-by=item.additionalFields.postDateTime&whats-new-cards.sort-order=desc&eks-blogs.sort-by=item.additionalFields.createdDate&eks-blogs.sort-order=desc).
+- Manages Kubernetes API servers and the etcd database.
+- Runs the Kubernetes control plane across three availability zones.
+- Scales the control-plane as you add more nodes to your cluster.
+- Provides a mechanism to upgrade your control plane to a newer version.
+- Rotates certificates.
+- [And more](https://aws.amazon.com/eks/?whats-new-cards.sort-by=item.additionalFields.postDateTime&whats-new-cards.sort-order=desc&eks-blogs.sort-by=item.additionalFields.createdDate&eks-blogs.sort-order=desc).
 
 Less timing managing the cluster means that you have more time to focus on developing and deploying applications.
 
@@ -17,17 +17,17 @@ In this article, you will create an EKS cluster and deploy a Spring Boot applica
 
 The application comes packaged as a Docker container already.
 
-If it peaks your interest, you can also [learn how to package or test your deplyoment into a local Kubernetes cluster](#).
+If it peaks your interest, you can also [learn how to package or test your deplyoment into a local Kubernetes cluster]().
 
 Here's everything you'll look at today.
 
 ## Table of contents
 
 1. [Logging into Amazon Web Services](#logging-into-amazon-web-services)
-2. [Creating a Kubernetes cluster on AWS](#creating-a-kubernetes-cluster-on-aws)
-3. [Deploying the app](#deploying-the-app)
-4. [Taking into account resource limits](#taking-into-account-resource-limits)
-5. [Cleaning up](#cleaning-up)
+1. [Creating a Kubernetes cluster on AWS](#creating-a-kubernetes-cluster-on-aws)
+1. [Deploying the app](#deploying-the-app)
+1. [Taking into account resource limits](#taking-into-account-resource-limits)
+1. [Cleaning up](#cleaning-up)
 
 ## Logging into Amazon Web Services
 
@@ -228,11 +228,11 @@ The application is made of two parts:
 1. A front-end written in Spring Boot and Express.
 1. A MongoDB to persist the data.
 
-If you want to learn how to develop and package the application in a Docker container, [you might want to read this chapter of the course.](#)
+If you want to learn how to develop and package the application in a Docker container, [you might want to read this chapter of the course.]()
 
-If you need help to set up a local Kubernetes cluster or deploy the application on Kubernetes, [you might want to read this other chapter.](#)
+If you need help to set up a local Kubernetes cluster or deploy the application on Kubernetes, [you might want to read this other chapter.]()
 
-If you want to know how this app was refactored to scale horizontally, [you might want to read this chapter instead.](#)
+If you want to know how this app was refactored to scale horizontally, [you might want to read this chapter instead.]()
 
 All the code to build and deploy the app is available [in this repository](https://github.com/learnk8s/knote-java/tree/master/05).
 

@@ -15,7 +15,7 @@ Here's how the development will unfold.
 ## Table of contents
 
 1. [Knote — a note taking app](#knote-a-note-taking-app)
-1. [Standard Express.js stack](#standard-express-js-stack)
+1. MISSING
 1. [Connecting a database](#connecting-a-database)
 1. [Saving and retrieving notes](#saving-and-retrieving-notes)
 1. [Rendering Markdown to HTML](#rendering-markdown-to-html)
@@ -960,8 +960,8 @@ Well done for making it this far!
 Here's a recap of what you've done so far.
 
 1. You created an application using Express.js and MongoDB.
-2. You packaged the app as a container using Docker.
-3. You uploaded the container to Docker Hub — a container registry.
-4. You ran the app and the databases locally using Docker.
+1. You packaged the app as a container using Docker.
+1. You uploaded the container to Docker Hub — a container registry.
+1. You ran the app and the databases locally using Docker.
 
-[In the next section, you will learn how to run your containerised application on Kubernetes!](#)
+[In the next section, you will learn how to run your containerised application on Kubernetes!]()

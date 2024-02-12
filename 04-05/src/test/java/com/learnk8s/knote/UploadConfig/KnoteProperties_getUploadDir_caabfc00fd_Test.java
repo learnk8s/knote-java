@@ -38,7 +38,7 @@ Here are some test scenarios to validate business logic without writing test cod
 */
 
 // ********RoostGPT********
-package com.learnk8s.knote;
+package com.learnk8s.knote.UploadConfig;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,7 +47,7 @@ import org.junit.Test;
 public class KnoteProperties_getUploadDir_caabfc00fd_Test {
 
     private KnoteProperties knoteProperties;
-    
+
     @Before
     public void setUp() {
         knoteProperties = new KnoteProperties();
@@ -55,35 +55,35 @@ public class KnoteProperties_getUploadDir_caabfc00fd_Test {
 
     @Test
     public void testGetUploadDir_Null() {
-        knoteProperties.uploadDir = null;
+        // knoteProperties.uploadDir = null;// uploadDir is private var
         String result = knoteProperties.getUploadDir();
         Assert.assertNull(result);
     }
-    
+
     @Test
     public void testGetUploadDir_EmptyString() {
-        knoteProperties.uploadDir = "";
+        // knoteProperties.uploadDir = "";
         String result = knoteProperties.getUploadDir();
         Assert.assertEquals("", result);
     }
 
     @Test
     public void testGetUploadDir_WhiteSpace() {
-        knoteProperties.uploadDir = "    ";
+        // knoteProperties.uploadDir = " ";
         String result = knoteProperties.getUploadDir();
         Assert.assertEquals("    ", result);
     }
 
     @Test
     public void testGetUploadDir_SpecialCharacters() {
-        knoteProperties.uploadDir = "@#%&*()!";
+        // knoteProperties.uploadDir = "@#%&*()!";
         String result = knoteProperties.getUploadDir();
         Assert.assertEquals("@#%&*()!", result);
     }
 
     @Test
     public void testGetUploadDir_MultiLevelPath() {
-        knoteProperties.uploadDir = "/path/to/directory";
+        // knoteProperties.uploadDir = "/path/to/directory";
         String result = knoteProperties.getUploadDir();
         Assert.assertEquals("/path/to/directory", result);
     }
@@ -94,16 +94,18 @@ public class KnoteProperties_getUploadDir_caabfc00fd_Test {
         for (int i = 0; i < 10000; i++) {
             longString.append("a");
         }
-        knoteProperties.uploadDir = longString.toString();
+        // knoteProperties.uploadDir = longString.toString();
         String result = knoteProperties.getUploadDir();
-        // TODO: Check your system specifications to handle the strings of maximum length
-        // In this case, we are assuming that the system can handle strings of length 10000
+        // TODO: Check your system specifications to handle the strings of maximum
+        // length
+        // In this case, we are assuming that the system can handle strings of length
+        // 10000
         Assert.assertEquals(longString.toString(), result);
     }
 
     @Test
     public void testGetUploadDir_NonEnglishCharacters() {
-        knoteProperties.uploadDir = "目录/директория/ספרייה";
+        // knoteProperties.uploadDir = "目录/директория/ספרייה";
         String result = knoteProperties.getUploadDir();
         Assert.assertEquals("目录/директория/ספרייה", result);
     }
